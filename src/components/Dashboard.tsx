@@ -1,111 +1,295 @@
-import { Thermometer, Droplets, Wind, Gauge, Cloud } from "lucide-react";
+import { Thermometer, Droplets, Wind, Gauge, Cloud, MapPin, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface WeatherData {
+  location: string;
+  temperature: number;
+  humidity: number;
+  rainfall: number;
+  windSpeed: number;
+  aqi: number;
+  description: string;
+  risks: {
+    flood: string;
+    heatwave: string;
+    airQuality: string;
+    storm: string;
+  };
+  timestamp: string;
+}
 
 const Dashboard = () => {
-  const metrics = [
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+
+  const fetchWeatherData = async () => {
+    try {
+      setLoading(true);
+      
+      // Get user's location
+      if (!navigator.geolocation) {
+        toast.error("Geolocation is not supported by your browser");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          const { data, error } = await supabase.functions.invoke('weather-data', {
+            body: { lat: latitude, lon: longitude }
+          });
+
+          if (error) {
+            console.error('Error fetching weather data:', error);
+            toast.error("Failed to fetch weather data");
+            return;
+          }
+
+          setWeatherData(data);
+          setLastUpdate(new Date());
+          toast.success(`Weather data updated for ${data.location}`);
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          // Fallback to default location (Mumbai coordinates)
+          fetchWithDefaultLocation();
+        }
+      );
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("Failed to fetch weather data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchWithDefaultLocation = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('weather-data', {
+        body: { lat: 19.076, lon: 72.8777 } // Mumbai coordinates as default
+      });
+
+      if (error) {
+        console.error('Error fetching weather data:', error);
+        toast.error("Failed to fetch weather data");
+        return;
+      }
+
+      setWeatherData(data);
+      setLastUpdate(new Date());
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("Failed to fetch weather data");
+    }
+  };
+
+  useEffect(() => {
+    fetchWeatherData();
+    
+    // Auto-refresh every 5 minutes
+    const interval = setInterval(fetchWeatherData, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  const getProgressValue = (metric: string, value: number) => {
+    switch (metric) {
+      case 'temperature':
+        return Math.min((value / 50) * 100, 100);
+      case 'humidity':
+        return value;
+      case 'rainfall':
+        return Math.min((value / 20) * 100, 100);
+      case 'windSpeed':
+        return Math.min((value / 100) * 100, 100);
+      case 'aqi':
+        return Math.min((value / 500) * 100, 100);
+      default:
+        return 0;
+    }
+  };
+
+  const getStatusColor = (value: number, metric: string) => {
+    if (metric === 'temperature') {
+      return value > 35 ? 'text-warning' : value > 30 ? 'text-accent' : 'text-success';
+    }
+    if (metric === 'aqi') {
+      return value > 150 ? 'text-destructive' : value > 100 ? 'text-warning' : 'text-success';
+    }
+    if (metric === 'rainfall') {
+      return value > 10 ? 'text-destructive' : value > 5 ? 'text-warning' : 'text-primary';
+    }
+    if (metric === 'windSpeed') {
+      return value > 50 ? 'text-destructive' : value > 30 ? 'text-warning' : 'text-success';
+    }
+    return 'text-primary';
+  };
+
+  const getStatus = (value: number, metric: string) => {
+    if (metric === 'temperature') {
+      return value > 35 ? 'High' : value > 30 ? 'Moderate' : 'Normal';
+    }
+    if (metric === 'aqi') {
+      return value > 150 ? 'Unhealthy' : value > 100 ? 'Moderate' : 'Good';
+    }
+    if (metric === 'rainfall') {
+      return value > 10 ? 'Heavy' : value > 5 ? 'Moderate' : 'Light';
+    }
+    if (metric === 'windSpeed') {
+      return value > 50 ? 'Storm' : value > 30 ? 'Strong' : 'Normal';
+    }
+    return 'Normal';
+  };
+
+  const metrics = weatherData ? [
     {
       icon: Thermometer,
       label: "Temperature",
-      value: "32°C",
-      status: "High",
-      color: "text-warning",
-      progress: 80,
+      value: `${weatherData.temperature}°C`,
+      status: getStatus(weatherData.temperature, 'temperature'),
+      color: getStatusColor(weatherData.temperature, 'temperature'),
+      progress: getProgressValue('temperature', weatherData.temperature),
     },
     {
       icon: Droplets,
       label: "Humidity",
-      value: "70%",
+      value: `${weatherData.humidity}%`,
       status: "Moderate",
       color: "text-primary",
-      progress: 70,
+      progress: weatherData.humidity,
     },
     {
       icon: Cloud,
       label: "Rainfall",
-      value: "12mm",
-      status: "Moderate",
-      color: "text-primary",
-      progress: 60,
+      value: `${weatherData.rainfall}mm`,
+      status: getStatus(weatherData.rainfall, 'rainfall'),
+      color: getStatusColor(weatherData.rainfall, 'rainfall'),
+      progress: getProgressValue('rainfall', weatherData.rainfall),
     },
     {
       icon: Wind,
       label: "Wind Speed",
-      value: "15 km/h",
-      status: "Normal",
-      color: "text-success",
-      progress: 40,
+      value: `${weatherData.windSpeed} km/h`,
+      status: getStatus(weatherData.windSpeed, 'windSpeed'),
+      color: getStatusColor(weatherData.windSpeed, 'windSpeed'),
+      progress: getProgressValue('windSpeed', weatherData.windSpeed),
     },
     {
       icon: Gauge,
       label: "Air Quality (AQI)",
-      value: "140",
-      status: "Unhealthy",
-      color: "text-destructive",
-      progress: 90,
+      value: `${weatherData.aqi}`,
+      status: getStatus(weatherData.aqi, 'aqi'),
+      color: getStatusColor(weatherData.aqi, 'aqi'),
+      progress: getProgressValue('aqi', weatherData.aqi),
     },
-  ];
+  ] : [];
 
-  const risks = [
-    { type: "Flood Risk", level: "Moderate", color: "bg-warning", textColor: "text-warning" },
-    { type: "Heatwave Risk", level: "Low", color: "bg-success", textColor: "text-success" },
-    { type: "Air Quality Risk", level: "High", color: "bg-destructive", textColor: "text-destructive" },
-  ];
+  const getRiskColor = (level: string) => {
+    return level === 'High' ? 'bg-destructive' : level === 'Moderate' ? 'bg-warning' : 'bg-success';
+  };
+
+  const getRiskTextColor = (level: string) => {
+    return level === 'High' ? 'text-destructive' : level === 'Moderate' ? 'text-warning' : 'text-success';
+  };
+
+  const risks = weatherData ? [
+    { type: "Flood Risk", level: weatherData.risks.flood, color: getRiskColor(weatherData.risks.flood), textColor: getRiskTextColor(weatherData.risks.flood) },
+    { type: "Heatwave Risk", level: weatherData.risks.heatwave, color: getRiskColor(weatherData.risks.heatwave), textColor: getRiskTextColor(weatherData.risks.heatwave) },
+    { type: "Air Quality Risk", level: weatherData.risks.airQuality, color: getRiskColor(weatherData.risks.airQuality), textColor: getRiskTextColor(weatherData.risks.airQuality) },
+  ] : [];
 
   return (
     <section id="dashboard" className="py-20 bg-muted">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
             Live Environmental Dashboard
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
             Real-time monitoring of environmental conditions powered by AI
           </p>
+          
+          {weatherData && (
+            <div className="flex items-center justify-center gap-4 text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                <span className="font-medium">{weatherData.location}</span>
+              </div>
+              <span>•</span>
+              <span className="text-sm">
+                Last updated: {lastUpdate.toLocaleTimeString()}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={fetchWeatherData}
+                disabled={loading}
+                className="ml-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {metrics.map((metric, index) => (
-            <Card key={index} className="bg-gradient-card border-border hover:shadow-glow transition-all duration-300">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <metric.icon className={`w-8 h-8 ${metric.color}`} />
-                  <Badge variant={metric.status === "Normal" || metric.status === "Low" ? "default" : "destructive"}>
-                    {metric.status}
-                  </Badge>
-                </div>
-                <CardTitle className="text-xl">{metric.label}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold mb-3">{metric.value}</div>
-                <Progress value={metric.progress} className="h-2" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <Card className="max-w-4xl mx-auto bg-gradient-card border-border shadow-glow">
-          <CardHeader>
-            <CardTitle className="text-2xl">AI Risk Assessment</CardTitle>
-            <CardDescription>Current disaster probability predictions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {risks.map((risk, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-background rounded-lg border border-border">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-3 h-3 rounded-full ${risk.color}`}></div>
-                    <span className="font-semibold text-lg">{risk.type}</span>
-                  </div>
-                  <Badge className={risk.textColor} variant="outline">
-                    {risk.level} Risk
-                  </Badge>
-                </div>
+        {loading && !weatherData ? (
+          <div className="text-center py-12">
+            <RefreshCw className="w-12 h-12 animate-spin mx-auto text-primary mb-4" />
+            <p className="text-muted-foreground">Loading environmental data...</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+              {metrics.map((metric, index) => (
+                <Card key={index} className="bg-gradient-card border-border hover:shadow-glow transition-all duration-300">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <metric.icon className={`w-8 h-8 ${metric.color}`} />
+                      <Badge variant={metric.status === "Normal" || metric.status === "Good" || metric.status === "Light" ? "default" : "destructive"}>
+                        {metric.status}
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-xl">{metric.label}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold mb-3">{metric.value}</div>
+                    <Progress value={metric.progress} className="h-2" />
+                  </CardContent>
+                </Card>
               ))}
             </div>
-          </CardContent>
-        </Card>
+
+            <Card className="max-w-4xl mx-auto bg-gradient-card border-border shadow-glow">
+              <CardHeader>
+                <CardTitle className="text-2xl">AI Risk Assessment</CardTitle>
+                <CardDescription>Current disaster probability predictions based on real-time data</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {risks.map((risk, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 bg-background rounded-lg border border-border">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-3 h-3 rounded-full ${risk.color}`}></div>
+                        <span className="font-semibold text-lg">{risk.type}</span>
+                      </div>
+                      <Badge className={risk.textColor} variant="outline">
+                        {risk.level} Risk
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
     </section>
   );
