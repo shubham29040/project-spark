@@ -59,8 +59,19 @@ const Dashboard = () => {
         },
         (error) => {
           console.error('Geolocation error:', error);
-          // Fallback to default location (Mumbai coordinates)
+          if (error.code === error.PERMISSION_DENIED) {
+            toast.error("Location access denied. Using default location.");
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            toast.error("Location information unavailable. Using default location.");
+          } else if (error.code === error.TIMEOUT) {
+            toast.error("Location request timed out. Using default location.");
+          }
           fetchWithDefaultLocation();
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
         }
       );
     } catch (error) {
