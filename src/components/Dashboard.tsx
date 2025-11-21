@@ -1,4 +1,4 @@
-import { Thermometer, Droplets, Wind, Gauge, Cloud, MapPin, RefreshCw } from "lucide-react";
+import { Thermometer, Droplets, Wind, Gauge, Cloud, MapPin, RefreshCw, Bell, BellOff } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
@@ -6,6 +6,8 @@ import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import AlertBanner from "./AlertBanner";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface WeatherData {
   location: string;
@@ -28,6 +30,9 @@ const Dashboard = () => {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [alerts, setAlerts] = useState<{ type: string; level: string; message: string }[]>([]);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const { permission, requestPermission, showNotification, isSupported } = useNotifications();
 
   const fetchWeatherData = async () => {
     try {
@@ -55,6 +60,7 @@ const Dashboard = () => {
 
           setWeatherData(data);
           setLastUpdate(new Date());
+          checkForAlerts(data);
           toast.success(`Weather data updated for ${data.location}`);
         },
         (error) => {
@@ -96,9 +102,103 @@ const Dashboard = () => {
 
       setWeatherData(data);
       setLastUpdate(new Date());
+      checkForAlerts(data);
     } catch (error) {
       console.error('Error:', error);
       toast.error("Failed to fetch weather data");
+    }
+  };
+
+  const checkForAlerts = (data: WeatherData) => {
+    const newAlerts: { type: string; level: string; message: string }[] = [];
+
+    if (data.risks.flood === "High") {
+      newAlerts.push({
+        type: "Flood",
+        level: "High",
+        message: `High flood risk detected in ${data.location}`,
+      });
+    }
+
+    if (data.risks.heatwave === "High") {
+      newAlerts.push({
+        type: "Heatwave",
+        level: "High",
+        message: `Extreme heat warning for ${data.location}`,
+      });
+    }
+
+    if (data.risks.airQuality === "High") {
+      newAlerts.push({
+        type: "Air Quality",
+        level: "High",
+        message: `Unhealthy air quality detected (AQI: ${data.aqi})`,
+      });
+    }
+
+    if (data.risks.storm === "High") {
+      newAlerts.push({
+        type: "Storm",
+        level: "High",
+        message: `Severe storm warning for ${data.location}`,
+      });
+    }
+
+    // Check for moderate risks
+    if (data.risks.flood === "Moderate") {
+      newAlerts.push({
+        type: "Flood",
+        level: "Moderate",
+        message: `Moderate flood risk in ${data.location}`,
+      });
+    }
+
+    if (data.risks.airQuality === "Moderate") {
+      newAlerts.push({
+        type: "Air Quality",
+        level: "Moderate",
+        message: `Moderate air quality levels (AQI: ${data.aqi})`,
+      });
+    }
+
+    setAlerts(newAlerts);
+
+    // Show notifications for critical alerts
+    if (notificationsEnabled && newAlerts.some(a => a.level === "High")) {
+      const criticalAlerts = newAlerts.filter(a => a.level === "High");
+      criticalAlerts.forEach(alert => {
+        showNotification("DisasterSense Alert", {
+          body: alert.message,
+          tag: alert.type,
+          requireInteraction: true,
+        });
+      });
+    }
+
+    // Show toast for high-level alerts
+    newAlerts.forEach(alert => {
+      if (alert.level === "High") {
+        toast.error(alert.message, {
+          duration: 10000,
+        });
+      } else if (alert.level === "Moderate") {
+        toast.warning(alert.message);
+      }
+    });
+  };
+
+  const toggleNotifications = async () => {
+    if (!notificationsEnabled) {
+      const result = await requestPermission();
+      if (result === "granted") {
+        setNotificationsEnabled(true);
+        toast.success("Browser notifications enabled");
+      } else {
+        toast.error("Please enable notifications in your browser settings");
+      }
+    } else {
+      setNotificationsEnabled(false);
+      toast.info("Browser notifications disabled");
     }
   };
 
@@ -218,8 +318,10 @@ const Dashboard = () => {
   ] : [];
 
   return (
-    <section id="dashboard" className="py-20 bg-muted">
-      <div className="container mx-auto px-4">
+    <>
+      <AlertBanner alerts={alerts} onDismiss={() => setAlerts([])} />
+      <section id="dashboard" className="py-20 bg-muted">
+        <div className="container mx-auto px-4">
         <div className="text-center mb-8">
           <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
             Live Environmental Dashboard
@@ -247,6 +349,21 @@ const Dashboard = () => {
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               </Button>
+              {isSupported && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleNotifications}
+                  className="ml-2"
+                  title={notificationsEnabled ? "Disable notifications" : "Enable notifications"}
+                >
+                  {notificationsEnabled ? (
+                    <Bell className="w-4 h-4 text-primary" />
+                  ) : (
+                    <BellOff className="w-4 h-4" />
+                  )}
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -301,8 +418,9 @@ const Dashboard = () => {
             </Card>
           </>
         )}
-      </div>
-    </section>
+        </div>
+      </section>
+    </>
   );
 };
 
