@@ -1,10 +1,32 @@
-import { Shield, Menu, X } from "lucide-react";
+import { Shield, Menu, X, LogIn, LogOut } from "lucide-react";
 import { NavLink } from "./NavLink";
 import { Button } from "./ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { User } from "@supabase/supabase-js";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -45,6 +67,17 @@ const Navigation = () => {
             >
               Safety Guide
             </NavLink>
+            {user ? (
+              <Button onClick={handleSignOut} variant="outline" size="sm">
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            ) : (
+              <Button onClick={() => navigate("/auth")} variant="default" size="sm">
+                <LogIn className="w-4 h-4 mr-2" />
+                Sign In
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -93,6 +126,17 @@ const Navigation = () => {
             >
               Safety Guide
             </NavLink>
+            {user ? (
+              <Button onClick={handleSignOut} variant="outline" size="sm" className="w-full">
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            ) : (
+              <Button onClick={() => { navigate("/auth"); setIsOpen(false); }} variant="default" size="sm" className="w-full">
+                <LogIn className="w-4 h-4 mr-2" />
+                Sign In
+              </Button>
+            )}
           </div>
         )}
       </div>
