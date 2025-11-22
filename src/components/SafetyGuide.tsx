@@ -1,6 +1,7 @@
 import { Shield, AlertCircle, Heart, Home } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import EmergencyContactsManager from "./EmergencyContactsManager";
 
 const SafetyGuide = () => {
   const guidelines = {
@@ -89,11 +90,15 @@ const SafetyGuide = () => {
           ))}
         </Tabs>
 
+        <div className="mt-12 max-w-4xl mx-auto mb-8">
+          <EmergencyContactsManager />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 max-w-4xl mx-auto">
           <Card className="bg-gradient-card border-border hover:shadow-glow transition-all duration-300">
             <CardHeader>
               <Heart className="w-10 h-10 text-destructive mb-2" />
-              <CardTitle>Emergency Contacts</CardTitle>
+              <CardTitle>Emergency Services</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
