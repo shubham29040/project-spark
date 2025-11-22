@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Plus, Trash2, Edit2, Phone } from "lucide-react";
+import { Plus, Trash2, Edit2, Phone, LogIn } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,7 @@ interface EmergencyContact {
 const EmergencyContactsManager = () => {
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<EmergencyContact | null>(null);
   const [formData, setFormData] = useState({
@@ -32,10 +34,21 @@ const EmergencyContactsManager = () => {
     phone: "",
     relationship: "",
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchContacts();
+    checkAuth();
   }, []);
+
+  const checkAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setIsAuthenticated(!!user);
+    if (user) {
+      fetchContacts();
+    } else {
+      setIsLoading(false);
+    }
+  };
 
   const fetchContacts = async () => {
     try {
@@ -217,7 +230,19 @@ const EmergencyContactsManager = () => {
         </div>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
+        {!isAuthenticated ? (
+          <div className="text-center py-8">
+            <LogIn className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+            <p className="text-muted-foreground mb-2">Sign in to manage emergency contacts</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              You need to be signed in to add and manage your emergency contacts
+            </p>
+            <Button onClick={() => navigate("/auth")}>
+              <LogIn className="w-4 h-4 mr-2" />
+              Sign In
+            </Button>
+          </div>
+        ) : isLoading ? (
           <p className="text-muted-foreground text-center py-4">Loading contacts...</p>
         ) : contacts.length === 0 ? (
           <div className="text-center py-8">
