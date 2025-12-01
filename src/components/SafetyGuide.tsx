@@ -94,7 +94,7 @@ const SafetyGuide = () => {
           {Object.entries(guidelines).map(([key, data]) => {
             const IconComponent = data.icon;
             return (
-              <TabsContent key={key} value={key} className="mt-6">
+              <TabsContent key={key} value={key} className="mt-6 animate-fade-in-up">
                 <Card className={`relative overflow-hidden border-border ${data.bgClass} ${data.overlayClass}`}>
                   {/* Animated background elements */}
                   {key === "flood" && (
@@ -143,7 +143,8 @@ const SafetyGuide = () => {
                       {data.items.map((item, index) => (
                         <li 
                           key={index} 
-                          className="flex items-start gap-3 p-4 bg-background/80 backdrop-blur-sm rounded-lg border border-white/10 shadow-lg"
+                          className="flex items-start gap-3 p-4 bg-background/80 backdrop-blur-sm rounded-lg border border-white/10 shadow-lg animate-slide-in-left"
+                          style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'both' }}
                         >
                           <div className={`p-1 rounded-full ${data.bgClass.includes('blue') ? 'bg-blue-500/20' : data.bgClass.includes('orange') ? 'bg-orange-500/20' : data.bgClass.includes('gray') ? 'bg-gray-500/20' : 'bg-purple-500/20'}`}>
                             <AlertCircle className={`w-5 h-5 ${data.color} mt-0.5 flex-shrink-0`} />
