@@ -2,6 +2,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import Dashboard from "@/components/Dashboard";
 import Map from "@/components/Map";
+import PageTransition from "@/components/PageTransition";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -42,32 +43,34 @@ const DashboardPage = () => {
   }, []);
 
   return (
-    <main className="min-h-screen flex flex-col">
-      <Navigation />
-      <div className="flex-1">
-        <Dashboard />
-        <section className="py-12 bg-background">
-          <div className="container mx-auto px-4">
-            <Card className="max-w-6xl mx-auto bg-gradient-card border-border shadow-glow">
-              <CardHeader>
-                <CardTitle className="text-2xl">Location Map</CardTitle>
-                <CardDescription>
-                  Your current location and surrounding area
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Map 
-                  latitude={locationData?.latitude}
-                  longitude={locationData?.longitude}
-                  location={locationData?.location}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-      </div>
-      <Footer />
-    </main>
+    <PageTransition>
+      <main className="min-h-screen flex flex-col">
+        <Navigation />
+        <div className="flex-1">
+          <Dashboard />
+          <section className="py-12 bg-background">
+            <div className="container mx-auto px-4">
+              <Card className="max-w-6xl mx-auto bg-gradient-card border-border shadow-glow">
+                <CardHeader>
+                  <CardTitle className="text-2xl">Location Map</CardTitle>
+                  <CardDescription>
+                    Your current location and surrounding area
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Map 
+                    latitude={locationData?.latitude}
+                    longitude={locationData?.longitude}
+                    location={locationData?.location}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+        </div>
+        <Footer />
+      </main>
+    </PageTransition>
   );
 };
 
