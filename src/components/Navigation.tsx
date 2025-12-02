@@ -41,28 +41,28 @@ const Navigation = () => {
           <div className="hidden md:flex items-center gap-6">
             <NavLink 
               to="/" 
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="relative text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
               activeClassName="text-primary font-semibold"
             >
               Home
             </NavLink>
             <NavLink 
               to="/dashboard" 
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="relative text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
               activeClassName="text-primary font-semibold"
             >
               Dashboard
             </NavLink>
             <NavLink 
               to="/features" 
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="relative text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
               activeClassName="text-primary font-semibold"
             >
               Features
             </NavLink>
             <NavLink 
               to="/safety" 
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="relative text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
               activeClassName="text-primary font-semibold"
             >
               Safety Guide
@@ -96,7 +96,7 @@ const Navigation = () => {
           <div className="md:hidden py-4 space-y-2 border-t border-border">
             <NavLink 
               to="/" 
-              className="block py-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="block py-2 text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-2 hover:font-medium"
               activeClassName="text-primary font-semibold"
               onClick={() => setIsOpen(false)}
             >
@@ -104,7 +104,7 @@ const Navigation = () => {
             </NavLink>
             <NavLink 
               to="/dashboard" 
-              className="block py-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="block py-2 text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-2 hover:font-medium"
               activeClassName="text-primary font-semibold"
               onClick={() => setIsOpen(false)}
             >
@@ -112,7 +112,7 @@ const Navigation = () => {
             </NavLink>
             <NavLink 
               to="/features" 
-              className="block py-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="block py-2 text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-2 hover:font-medium"
               activeClassName="text-primary font-semibold"
               onClick={() => setIsOpen(false)}
             >
@@ -120,7 +120,7 @@ const Navigation = () => {
             </NavLink>
             <NavLink 
               to="/safety" 
-              className="block py-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="block py-2 text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-2 hover:font-medium"
               activeClassName="text-primary font-semibold"
               onClick={() => setIsOpen(false)}
             >
