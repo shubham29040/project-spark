@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
+import { ThemeToggle } from "./ThemeToggle";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -67,6 +68,7 @@ const Navigation = () => {
             >
               Safety Guide
             </NavLink>
+            <ThemeToggle />
             {user ? (
               <Button onClick={handleSignOut} variant="outline" size="sm">
                 <LogOut className="w-4 h-4 mr-2" />
@@ -126,17 +128,20 @@ const Navigation = () => {
             >
               Safety Guide
             </NavLink>
-            {user ? (
-              <Button onClick={handleSignOut} variant="outline" size="sm" className="w-full">
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
-            ) : (
-              <Button onClick={() => { navigate("/auth"); setIsOpen(false); }} variant="default" size="sm" className="w-full">
-                <LogIn className="w-4 h-4 mr-2" />
-                Sign In
-              </Button>
-            )}
+            <div className="flex items-center gap-2 pt-2">
+              <ThemeToggle />
+              {user ? (
+                <Button onClick={handleSignOut} variant="outline" size="sm" className="flex-1">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
+              ) : (
+                <Button onClick={() => { navigate("/auth"); setIsOpen(false); }} variant="default" size="sm" className="flex-1">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Sign In
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </div>
