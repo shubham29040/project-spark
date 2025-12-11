@@ -5,6 +5,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Calculate AQI from PM2.5 concentration using EPA standard
+function calculateAQIFromPM25(pm25: number): number {
+  const breakpoints = [
+    { cLow: 0, cHigh: 12, iLow: 0, iHigh: 50 },
+    { cLow: 12.1, cHigh: 35.4, iLow: 51, iHigh: 100 },
+    { cLow: 35.5, cHigh: 55.4, iLow: 101, iHigh: 150 },
+    { cLow: 55.5, cHigh: 150.4, iLow: 151, iHigh: 200 },
+    { cLow: 150.5, cHigh: 250.4, iLow: 201, iHigh: 300 },
+    { cLow: 250.5, cHigh: 350.4, iLow: 301, iHigh: 400 },
+    { cLow: 350.5, cHigh: 500.4, iLow: 401, iHigh: 500 },
+  ];
+
+  for (const bp of breakpoints) {
+    if (pm25 >= bp.cLow && pm25 <= bp.cHigh) {
+      const aqi = ((bp.iHigh - bp.iLow) / (bp.cHigh - bp.cLow)) * (pm25 - bp.cLow) + bp.iLow;
+      return Math.round(aqi);
+    }
+  }
+
+  // If PM2.5 exceeds 500.4, cap AQI at 500
+  return pm25 > 500.4 ? 500 : 0;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -43,9 +66,11 @@ serve(async (req) => {
     let aqi = 0;
     if (airQualityResponse.ok) {
       const airQualityData = await airQualityResponse.json();
-      // Convert AQI scale (1-5) to more standard 0-500 scale
-      aqi = airQualityData.list[0].main.aqi * 50;
-      console.log('AQI data received:', aqi);
+      // Get PM2.5 concentration from components
+      const pm25 = airQualityData.list[0]?.components?.pm2_5 || 0;
+      // Calculate proper AQI from PM2.5 using EPA standard
+      aqi = calculateAQIFromPM25(pm25);
+      console.log(`PM2.5: ${pm25} µg/m³, Calculated AQI: ${aqi}`);
     }
 
     // Calculate risk levels based on environmental data
