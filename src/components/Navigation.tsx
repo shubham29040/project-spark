@@ -1,4 +1,4 @@
-import { Shield, Menu, X, LogIn, LogOut } from "lucide-react";
+import { Shield, Menu, X, LogIn, LogOut, Settings } from "lucide-react";
 import { NavLink } from "./NavLink";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
@@ -70,10 +70,16 @@ const Navigation = () => {
             </NavLink>
             <ThemeToggle />
             {user ? (
-              <Button onClick={handleSignOut} variant="outline" size="sm">
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
+              <>
+                <Button onClick={() => navigate("/settings")} variant="ghost" size="sm">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </Button>
+                <Button onClick={handleSignOut} variant="outline" size="sm">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
+              </>
             ) : (
               <Button onClick={() => navigate("/auth")} variant="default" size="sm">
                 <LogIn className="w-4 h-4 mr-2" />
@@ -128,15 +134,21 @@ const Navigation = () => {
             >
               Safety Guide
             </NavLink>
-            <div className="flex items-center gap-2 pt-2">
+            <div className="flex flex-col gap-2 pt-2">
               <ThemeToggle />
               {user ? (
-                <Button onClick={handleSignOut} variant="outline" size="sm" className="flex-1">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign Out
-                </Button>
+                <>
+                  <Button onClick={() => { navigate("/settings"); setIsOpen(false); }} variant="ghost" size="sm" className="justify-start">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Settings
+                  </Button>
+                  <Button onClick={handleSignOut} variant="outline" size="sm">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </>
               ) : (
-                <Button onClick={() => { navigate("/auth"); setIsOpen(false); }} variant="default" size="sm" className="flex-1">
+                <Button onClick={() => { navigate("/auth"); setIsOpen(false); }} variant="default" size="sm">
                   <LogIn className="w-4 h-4 mr-2" />
                   Sign In
                 </Button>
