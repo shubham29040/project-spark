@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +25,7 @@ const AuthPage = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const [isSendingReset, setIsSendingReset] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -105,6 +107,11 @@ const AuthPage = () => {
         email: validated.email,
         password: validated.password,
       });
+
+      if (!error && rememberMe) {
+        // Store preference in localStorage to indicate extended session
+        localStorage.setItem('rememberMe', 'true');
+      }
 
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
@@ -230,6 +237,19 @@ const AuthPage = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                       />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="remember-me" 
+                        checked={rememberMe}
+                        onCheckedChange={(checked) => setRememberMe(checked === true)}
+                      />
+                      <Label 
+                        htmlFor="remember-me" 
+                        className="text-sm font-normal cursor-pointer"
+                      >
+                        Remember me
+                      </Label>
                     </div>
                     <Button type="submit" className="w-full" disabled={isLoading}>
                       {isLoading ? "Signing in..." : "Sign In"}
