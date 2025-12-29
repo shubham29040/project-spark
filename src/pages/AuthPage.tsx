@@ -21,6 +21,9 @@ const AuthPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [isSendingReset, setIsSendingReset] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -105,9 +108,10 @@ const AuthPage = () => {
 
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
+          setShowForgotPassword(true);
           toast({
             title: "Sign in failed",
-            description: "Invalid email or password. Please try again.",
+            description: "Invalid email or password. Please try again or reset your password.",
             variant: "destructive",
           });
         } else {
@@ -128,6 +132,45 @@ const AuthPage = () => {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSendingReset(true);
+
+    try {
+      const emailToReset = forgotPasswordEmail || email;
+      
+      if (!emailToReset) {
+        toast({
+          title: "Email required",
+          description: "Please enter your email address.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(emailToReset, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+
+      if (error) {
+        toast({
+          title: "Reset failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Reset email sent!",
+          description: "Check your email for a password reset link.",
+        });
+        setShowForgotPassword(false);
+        setForgotPasswordEmail("");
+      }
+    } finally {
+      setIsSendingReset(false);
     }
   };
 
@@ -191,6 +234,30 @@ const AuthPage = () => {
                     <Button type="submit" className="w-full" disabled={isLoading}>
                       {isLoading ? "Signing in..." : "Sign In"}
                     </Button>
+                    {showForgotPassword && (
+                      <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
+                        <p className="text-sm text-muted-foreground">
+                          Forgot your password? Enter your email to receive a reset link.
+                        </p>
+                        <form onSubmit={handleForgotPassword} className="space-y-3">
+                          <Input
+                            type="email"
+                            placeholder="your@email.com"
+                            value={forgotPasswordEmail || email}
+                            onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                            required
+                          />
+                          <Button 
+                            type="submit" 
+                            variant="secondary" 
+                            className="w-full"
+                            disabled={isSendingReset}
+                          >
+                            {isSendingReset ? "Sending..." : "Send Reset Email"}
+                          </Button>
+                        </form>
+                      </div>
+                    )}
                   </form>
                   <div className="relative my-4">
                     <Separator />
