@@ -12,6 +12,7 @@ import { z } from "zod";
 import Navigation from "@/components/Navigation";
 import { Separator } from "@/components/ui/separator";
 import PageTransition from "@/components/PageTransition";
+import TwoFactorVerify from "@/components/TwoFactorVerify";
 
 const authSchema = z.object({
   email: z.string().email("Invalid email address").max(255),
@@ -26,6 +27,7 @@ const AuthPage = () => {
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const [isSendingReset, setIsSendingReset] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [showMfaVerify, setShowMfaVerify] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -33,19 +35,41 @@ const AuthPage = () => {
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/");
+        // Check if MFA is required
+        checkMfaRequired(session);
       }
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
-        navigate("/");
+      if (session && event !== 'MFA_CHALLENGE_VERIFIED') {
+        checkMfaRequired(session);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const checkMfaRequired = async (session: any) => {
+    const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    
+    if (data?.currentLevel === 'aal1' && data?.nextLevel === 'aal2') {
+      // User has MFA enabled but hasn't verified yet
+      setShowMfaVerify(true);
+    } else {
+      navigate("/");
+    }
+  };
+
+  const handleMfaVerified = () => {
+    setShowMfaVerify(false);
+    navigate("/");
+  };
+
+  const handleMfaCancel = async () => {
+    await supabase.auth.signOut();
+    setShowMfaVerify(false);
+  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -203,6 +227,12 @@ const AuthPage = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="container mx-auto px-4 py-20 flex items-center justify-center">
+        {showMfaVerify ? (
+          <TwoFactorVerify 
+            onVerified={handleMfaVerified}
+            onCancel={handleMfaCancel}
+          />
+        ) : (
           <Card className="w-full max-w-md">
             <CardHeader>
               <CardTitle>Welcome to NDMA Alert System</CardTitle>
@@ -376,6 +406,7 @@ const AuthPage = () => {
               </Tabs>
             </CardContent>
           </Card>
+        )}
         </div>
       </div>
     </PageTransition>
