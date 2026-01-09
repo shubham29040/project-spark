@@ -2,6 +2,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import Dashboard from "@/components/Dashboard";
 import Map from "@/components/Map";
+import WeatherHistoryChart from "@/components/WeatherHistoryChart";
 import PageTransition from "@/components/PageTransition";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,6 +74,11 @@ const DashboardPage = () => {
         <Navigation />
         <div className="flex-1">
           <Dashboard />
+          <section className="py-12 bg-background">
+            <div className="container mx-auto px-4">
+              <WeatherHistoryChart />
+            </div>
+          </section>
           {!showMap ? (
             <div className="py-8 flex justify-center">
               <Button 

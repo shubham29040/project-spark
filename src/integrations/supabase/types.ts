@@ -44,6 +44,63 @@ export type Database = {
         }
         Relationships: []
       }
+      weather_history: {
+        Row: {
+          air_quality_risk: string
+          aqi: number
+          created_at: string
+          description: string | null
+          flood_risk: string
+          heatwave_risk: string
+          humidity: number
+          id: string
+          latitude: number
+          location: string
+          longitude: number
+          rainfall: number
+          recorded_at: string
+          storm_risk: string
+          temperature: number
+          wind_speed: number
+        }
+        Insert: {
+          air_quality_risk?: string
+          aqi?: number
+          created_at?: string
+          description?: string | null
+          flood_risk?: string
+          heatwave_risk?: string
+          humidity: number
+          id?: string
+          latitude: number
+          location: string
+          longitude: number
+          rainfall?: number
+          recorded_at?: string
+          storm_risk?: string
+          temperature: number
+          wind_speed: number
+        }
+        Update: {
+          air_quality_risk?: string
+          aqi?: number
+          created_at?: string
+          description?: string | null
+          flood_risk?: string
+          heatwave_risk?: string
+          humidity?: number
+          id?: string
+          latitude?: number
+          location?: string
+          longitude?: number
+          rainfall?: number
+          recorded_at?: string
+          storm_risk?: string
+          temperature?: number
+          wind_speed?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

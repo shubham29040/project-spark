@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -103,6 +104,42 @@ serve(async (req) => {
     };
 
     console.log('Sending response:', response);
+
+    // Store weather data in history table
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      
+      if (supabaseUrl && supabaseServiceKey) {
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+        
+        const { error: insertError } = await supabase
+          .from('weather_history')
+          .insert({
+            location: weatherData.name,
+            latitude: lat,
+            longitude: lon,
+            temperature: Math.round(temperature),
+            humidity,
+            rainfall: Math.round(rainfall * 10) / 10,
+            wind_speed: Math.round(windSpeed),
+            aqi: Math.round(aqi),
+            description: weatherData.weather[0].description,
+            flood_risk: floodRisk,
+            heatwave_risk: heatwaveRisk,
+            air_quality_risk: airQualityRisk,
+            storm_risk: stormRisk,
+          });
+
+        if (insertError) {
+          console.error('Error storing weather history:', insertError);
+        } else {
+          console.log('Weather data stored in history');
+        }
+      }
+    } catch (historyError) {
+      console.error('Failed to store weather history:', historyError);
+    }
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
