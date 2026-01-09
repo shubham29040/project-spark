@@ -35,77 +35,60 @@ const Dashboard = () => {
   const { permission, requestPermission, showNotification, isSupported } = useNotifications();
 
   const fetchWeatherData = async () => {
-    try {
-      setLoading(true);
-      
-      // Get user's location
-      if (!navigator.geolocation) {
-        toast.error("Geolocation is not supported by your browser");
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          
-          const { data, error } = await supabase.functions.invoke('weather-data', {
-            body: { lat: latitude, lon: longitude }
-          });
-
-          if (error) {
-            console.error('Error fetching weather data:', error);
-            toast.error("Failed to fetch weather data");
-            return;
-          }
-
-          setWeatherData(data);
-          setLastUpdate(new Date());
-          checkForAlerts(data);
-          toast.success(`Weather data updated for ${data.location}`);
-        },
-        (error) => {
-          console.error('Geolocation error:', error);
-          if (error.code === error.PERMISSION_DENIED) {
-            toast.error("Location access denied. Using default location.");
-          } else if (error.code === error.POSITION_UNAVAILABLE) {
-            toast.error("Location information unavailable. Using default location.");
-          } else if (error.code === error.TIMEOUT) {
-            toast.error("Location request timed out. Using default location.");
-          }
-          fetchWithDefaultLocation();
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
+    setLoading(true);
+    
+    // Try to get user's location, but don't block on it
+    const tryGeolocation = (): Promise<{ lat: number; lon: number }> => {
+      return new Promise((resolve) => {
+        if (!navigator.geolocation) {
+          console.log("Geolocation not supported, using default location");
+          resolve({ lat: 19.076, lon: 72.8777 }); // Mumbai default
+          return;
         }
-      );
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error("Failed to fetch weather data");
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const fetchWithDefaultLocation = async () => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            resolve({ 
+              lat: position.coords.latitude, 
+              lon: position.coords.longitude 
+            });
+          },
+          (error) => {
+            console.log('Geolocation error, using default location:', error.message || error);
+            resolve({ lat: 19.076, lon: 72.8777 }); // Mumbai default
+          },
+          {
+            enableHighAccuracy: false,
+            timeout: 5000,
+            maximumAge: 300000 // Cache for 5 minutes
+          }
+        );
+      });
+    };
+
     try {
+      const coords = await tryGeolocation();
+      
       const { data, error } = await supabase.functions.invoke('weather-data', {
-        body: { lat: 19.076, lon: 72.8777 } // Mumbai coordinates as default
+        body: { lat: coords.lat, lon: coords.lon }
       });
 
       if (error) {
         console.error('Error fetching weather data:', error);
         toast.error("Failed to fetch weather data");
+        setLoading(false);
         return;
       }
 
       setWeatherData(data);
       setLastUpdate(new Date());
       checkForAlerts(data);
+      toast.success(`Weather data updated for ${data.location}`);
     } catch (error) {
       console.error('Error:', error);
       toast.error("Failed to fetch weather data");
+    } finally {
+      setLoading(false);
     }
   };
 
