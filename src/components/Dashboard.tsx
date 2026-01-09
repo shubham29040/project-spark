@@ -1,14 +1,14 @@
-import { Thermometer, Droplets, Wind, Gauge, Cloud, MapPin, RefreshCw, Bell, BellOff } from "lucide-react";
+import { Thermometer, Droplets, Wind, Gauge, Cloud, MapPin, RefreshCw, Bell, BellOff, Search, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AlertBanner from "./AlertBanner";
 import { useNotifications } from "@/hooks/useNotifications";
-
 interface WeatherData {
   location: string;
   temperature: number;
@@ -32,11 +32,73 @@ const Dashboard = () => {
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [alerts, setAlerts] = useState<{ type: string; level: string; message: string }[]>([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searching, setSearching] = useState(false);
   const { permission, requestPermission, showNotification, isSupported } = useNotifications();
 
-  const fetchWeatherData = async () => {
-    setLoading(true);
+  const searchLocation = async (query: string) => {
+    if (!query.trim()) return;
     
+    setSearching(true);
+    try {
+      // Using Nominatim (OpenStreetMap) geocoding API - free and no API key required
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
+        {
+          headers: {
+            'User-Agent': 'DisasterSense/1.0'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Geocoding failed');
+      }
+      
+      const results = await response.json();
+      
+      if (results.length === 0) {
+        toast.error(`Location "${query}" not found. Try a different city name.`);
+        return;
+      }
+      
+      const { lat, lon, display_name } = results[0];
+      await fetchWeatherForCoords(parseFloat(lat), parseFloat(lon));
+      setSearchQuery("");
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      toast.error("Failed to search location. Please try again.");
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const fetchWeatherForCoords = async (lat: number, lon: number) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('weather-data', {
+        body: { lat, lon }
+      });
+
+      if (error) {
+        console.error('Error fetching weather data:', error);
+        toast.error("Failed to fetch weather data");
+        setLoading(false);
+        return;
+      }
+
+      setWeatherData(data);
+      setLastUpdate(new Date());
+      checkForAlerts(data);
+      toast.success(`Weather data updated for ${data.location}`);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("Failed to fetch weather data");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const fetchWeatherData = async () => {
     // Try to get user's location, but don't block on it
     const tryGeolocation = (): Promise<{ lat: number; lon: number }> => {
       return new Promise((resolve) => {
@@ -66,30 +128,8 @@ const Dashboard = () => {
       });
     };
 
-    try {
-      const coords = await tryGeolocation();
-      
-      const { data, error } = await supabase.functions.invoke('weather-data', {
-        body: { lat: coords.lat, lon: coords.lon }
-      });
-
-      if (error) {
-        console.error('Error fetching weather data:', error);
-        toast.error("Failed to fetch weather data");
-        setLoading(false);
-        return;
-      }
-
-      setWeatherData(data);
-      setLastUpdate(new Date());
-      checkForAlerts(data);
-      toast.success(`Weather data updated for ${data.location}`);
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error("Failed to fetch weather data");
-    } finally {
-      setLoading(false);
-    }
+    const coords = await tryGeolocation();
+    await fetchWeatherForCoords(coords.lat, coords.lon);
   };
 
   const checkForAlerts = (data: WeatherData) => {
@@ -312,41 +352,72 @@ const Dashboard = () => {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
             Real-time monitoring of environmental conditions powered by AI
           </p>
+
+          {/* Location Search */}
+          <div className="max-w-md mx-auto mb-6">
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                searchLocation(searchQuery);
+              }}
+              className="flex gap-2"
+            >
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search city (e.g., Tokyo, London, New York)"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                  disabled={searching}
+                />
+              </div>
+              <Button type="submit" disabled={searching || !searchQuery.trim()}>
+                {searching ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Search"
+                )}
+              </Button>
+            </form>
+          </div>
           
           {weatherData && (
-            <div className="flex items-center justify-center gap-4 text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-center gap-4 text-muted-foreground">
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
                 <span className="font-medium">{weatherData.location}</span>
               </div>
-              <span>•</span>
+              <span className="hidden sm:inline">•</span>
               <span className="text-sm">
                 Last updated: {lastUpdate.toLocaleTimeString()}
               </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={fetchWeatherData}
-                disabled={loading}
-                className="ml-2"
-              >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              </Button>
-              {isSupported && (
+              <div className="flex items-center gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={toggleNotifications}
-                  className="ml-2"
-                  title={notificationsEnabled ? "Disable notifications" : "Enable notifications"}
+                  onClick={fetchWeatherData}
+                  disabled={loading}
+                  title="Use my location"
                 >
-                  {notificationsEnabled ? (
-                    <Bell className="w-4 h-4 text-primary" />
-                  ) : (
-                    <BellOff className="w-4 h-4" />
-                  )}
+                  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 </Button>
-              )}
+                {isSupported && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleNotifications}
+                    title={notificationsEnabled ? "Disable notifications" : "Enable notifications"}
+                  >
+                    {notificationsEnabled ? (
+                      <Bell className="w-4 h-4 text-primary" />
+                    ) : (
+                      <BellOff className="w-4 h-4" />
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </div>
