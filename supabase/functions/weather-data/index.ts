@@ -6,16 +6,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-// Calculate AQI from PM2.5 concentration using EPA standard
-function calculateAQIFromPM25(pm25: number): number {
+// Calculate AQI from PM2.5 concentration using India's National Air Quality Index (NAQI) breakpoints
+function calculateNAQIFromPM25(pm25: number): number {
   const breakpoints = [
-    { cLow: 0, cHigh: 12, iLow: 0, iHigh: 50 },
-    { cLow: 12.1, cHigh: 35.4, iLow: 51, iHigh: 100 },
-    { cLow: 35.5, cHigh: 55.4, iLow: 101, iHigh: 150 },
-    { cLow: 55.5, cHigh: 150.4, iLow: 151, iHigh: 200 },
-    { cLow: 150.5, cHigh: 250.4, iLow: 201, iHigh: 300 },
-    { cLow: 250.5, cHigh: 350.4, iLow: 301, iHigh: 400 },
-    { cLow: 350.5, cHigh: 500.4, iLow: 401, iHigh: 500 },
+    { cLow: 0, cHigh: 30, iLow: 0, iHigh: 50 },       // Good
+    { cLow: 31, cHigh: 60, iLow: 51, iHigh: 100 },     // Satisfactory
+    { cLow: 61, cHigh: 90, iLow: 101, iHigh: 200 },    // Moderately Polluted
+    { cLow: 91, cHigh: 120, iLow: 201, iHigh: 300 },   // Poor
+    { cLow: 121, cHigh: 250, iLow: 301, iHigh: 400 },  // Very Poor
+    { cLow: 251, cHigh: 500, iLow: 401, iHigh: 500 },  // Severe
   ];
 
   for (const bp of breakpoints) {
@@ -25,8 +24,8 @@ function calculateAQIFromPM25(pm25: number): number {
     }
   }
 
-  // If PM2.5 exceeds 500.4, cap AQI at 500
-  return pm25 > 500.4 ? 500 : 0;
+  // If PM2.5 exceeds 500, cap AQI at 500
+  return pm25 > 500 ? 500 : 0;
 }
 
 serve(async (req) => {
@@ -69,9 +68,9 @@ serve(async (req) => {
       const airQualityData = await airQualityResponse.json();
       // Get PM2.5 concentration from components
       const pm25 = airQualityData.list[0]?.components?.pm2_5 || 0;
-      // Calculate proper AQI from PM2.5 using EPA standard
-      aqi = calculateAQIFromPM25(pm25);
-      console.log(`PM2.5: ${pm25} µg/m³, Calculated AQI: ${aqi}`);
+      // Calculate NAQI from PM2.5 using India's National Air Quality Index breakpoints
+      aqi = calculateNAQIFromPM25(pm25);
+      console.log(`PM2.5: ${pm25} µg/m³, Calculated NAQI: ${aqi}`);
     }
 
     // Calculate risk levels based on environmental data
