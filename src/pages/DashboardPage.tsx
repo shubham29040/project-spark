@@ -48,24 +48,8 @@ const DashboardPage = () => {
   };
 
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          fetchWeatherData(position.coords.latitude, position.coords.longitude);
-        },
-        () => {
-          // Default to Boisar if geolocation fails
-          fetchWeatherData(19.8, 72.76);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
-        }
-      );
-    } else {
-      fetchWeatherData(19.8, 72.76);
-    }
+    // Default to Boisar
+    fetchWeatherData(19.8, 72.76);
   }, []);
 
   return (
