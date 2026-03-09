@@ -54,8 +54,8 @@ const DashboardPage = () => {
           fetchWeatherData(position.coords.latitude, position.coords.longitude);
         },
         () => {
-          // Default to Mumbai if geolocation fails
-          fetchWeatherData(19.076, 72.8777);
+          // Default to Boisar if geolocation fails
+          fetchWeatherData(19.8, 72.76);
         },
         {
           enableHighAccuracy: true,
@@ -64,7 +64,7 @@ const DashboardPage = () => {
         }
       );
     } else {
-      fetchWeatherData(19.076, 72.8777);
+      fetchWeatherData(19.8, 72.76);
     }
   }, []);
 
