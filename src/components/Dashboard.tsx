@@ -1,4 +1,4 @@
-import { Thermometer, Droplets, Wind, Gauge, Cloud, MapPin, RefreshCw, Bell, BellOff, Search, Loader2 } from "lucide-react";
+import { Thermometer, Droplets, Wind, Gauge, Cloud, MapPin, RefreshCw, Bell, BellOff, Search, Loader2, Navigation } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
