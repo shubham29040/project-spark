@@ -99,37 +99,8 @@ const Dashboard = () => {
     }
   };
   const fetchWeatherData = async () => {
-    // Try to get user's location, but don't block on it
-    const tryGeolocation = (): Promise<{ lat: number; lon: number }> => {
-      return new Promise((resolve) => {
-        if (!navigator.geolocation) {
-          console.log("Geolocation not supported, using default location");
-          resolve({ lat: 19.8, lon: 72.76 }); // Boisar default
-          return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            resolve({ 
-              lat: position.coords.latitude, 
-              lon: position.coords.longitude 
-            });
-          },
-          (error) => {
-            console.log('Geolocation error, using default location:', error.message || error);
-            resolve({ lat: 19.8, lon: 72.76 }); // Boisar default
-          },
-          {
-            enableHighAccuracy: false,
-            timeout: 5000,
-            maximumAge: 300000 // Cache for 5 minutes
-          }
-        );
-      });
-    };
-
-    const coords = await tryGeolocation();
-    await fetchWeatherForCoords(coords.lat, coords.lon);
+    // Default to Boisar
+    await fetchWeatherForCoords(19.8, 72.76);
   };
 
   const checkForAlerts = (data: WeatherData) => {
