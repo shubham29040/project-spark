@@ -1,4 +1,4 @@
-import { Thermometer, Droplets, Wind, Gauge, Cloud, MapPin, RefreshCw, Bell, BellOff, Search, Loader2, Navigation } from "lucide-react";
+import { Thermometer, Droplets, Wind, Gauge, Cloud, MapPin, RefreshCw, Bell, BellOff, Search, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
@@ -101,30 +101,6 @@ const Dashboard = () => {
   const fetchWeatherData = async () => {
     // Default to Boisar
     await fetchWeatherForCoords(19.8, 72.76);
-  };
-
-  const useMyLocation = () => {
-    if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported by your browser");
-      return;
-    }
-
-    setLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        fetchWeatherForCoords(position.coords.latitude, position.coords.longitude);
-      },
-      (error) => {
-        console.error('Geolocation error:', error);
-        toast.error("Failed to get your location. Please check your permissions.");
-        setLoading(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    );
   };
 
   const checkForAlerts = (data: WeatherData) => {
@@ -348,8 +324,8 @@ const Dashboard = () => {
             Real-time monitoring of environmental conditions powered by AI
           </p>
 
-          {/* Location Search & GPS */}
-          <div className="max-w-md mx-auto mb-6 flex flex-col gap-3">
+          {/* Location Search */}
+          <div className="max-w-md mx-auto mb-6">
             <form 
               onSubmit={(e) => {
                 e.preventDefault();
@@ -376,16 +352,6 @@ const Dashboard = () => {
                 )}
               </Button>
             </form>
-            
-            <Button 
-              variant="outline" 
-              onClick={useMyLocation}
-              disabled={loading}
-              className="w-full gap-2"
-            >
-              <Navigation className="w-4 h-4" />
-              Use My Location
-            </Button>
           </div>
           
           {weatherData && (
