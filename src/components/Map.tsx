@@ -56,8 +56,8 @@ const Map = ({ latitude, longitude, location, risks }: MapProps) => {
   const marker = useRef<L.Marker | null>(null);
   const alertCircles = useRef<L.Circle[]>([]);
 
-  const lat = latitude || 19.076;
-  const lon = longitude || 72.8777;
+  const lat = latitude || 19.8;
+  const lon = longitude || 72.76;
 
   useEffect(() => {
     if (!mapContainer.current) return;

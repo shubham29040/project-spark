@@ -104,7 +104,7 @@ const Dashboard = () => {
       return new Promise((resolve) => {
         if (!navigator.geolocation) {
           console.log("Geolocation not supported, using default location");
-          resolve({ lat: 19.076, lon: 72.8777 }); // Mumbai default
+          resolve({ lat: 19.8, lon: 72.76 }); // Boisar default
           return;
         }
 
@@ -117,7 +117,7 @@ const Dashboard = () => {
           },
           (error) => {
             console.log('Geolocation error, using default location:', error.message || error);
-            resolve({ lat: 19.076, lon: 72.8777 }); // Mumbai default
+            resolve({ lat: 19.8, lon: 72.76 }); // Boisar default
           },
           {
             enableHighAccuracy: false,
