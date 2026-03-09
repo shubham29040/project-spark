@@ -402,7 +402,11 @@ const Dashboard = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {metrics.map((metric, index) => (
-                <Card key={index} className="bg-gradient-card border-border hover:shadow-glow transition-all duration-300">
+                <Card 
+                  key={index} 
+                  className="bg-gradient-card border-border hover:shadow-glow transition-all duration-300 animate-fade-in-up"
+                  style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }}
+                >
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <metric.icon className={`w-8 h-8 ${metric.color}`} />
@@ -420,7 +424,10 @@ const Dashboard = () => {
               ))}
             </div>
 
-            <Card className="max-w-4xl mx-auto bg-gradient-card border-border shadow-glow">
+            <Card 
+              className="max-w-4xl mx-auto bg-gradient-card border-border shadow-glow animate-fade-in-up"
+              style={{ animationDelay: `${metrics.length * 100}ms`, animationFillMode: 'both' }}
+            >
               <CardHeader>
                 <CardTitle className="text-2xl">AI Risk Assessment</CardTitle>
                 <CardDescription>Current disaster probability predictions based on real-time data</CardDescription>
@@ -428,7 +435,11 @@ const Dashboard = () => {
               <CardContent>
                 <div className="space-y-4">
                   {risks.map((risk, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-background rounded-lg border border-border">
+                    <div 
+                      key={index} 
+                      className="flex items-center justify-between p-4 bg-background rounded-lg border border-border animate-slide-in-left hover:scale-[1.02] transition-transform duration-200"
+                      style={{ animationDelay: `${(metrics.length * 100) + (index * 100)}ms`, animationFillMode: 'both' }}
+                    >
                       <div className="flex items-center gap-4">
                         <div className={`w-3 h-3 rounded-full ${risk.color}`}></div>
                         <span className="font-semibold text-lg">{risk.type}</span>
