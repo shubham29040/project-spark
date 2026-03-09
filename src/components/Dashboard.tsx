@@ -103,6 +103,30 @@ const Dashboard = () => {
     await fetchWeatherForCoords(19.8, 72.76);
   };
 
+  const useMyLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        fetchWeatherForCoords(position.coords.latitude, position.coords.longitude);
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        toast.error("Failed to get your location. Please check your permissions.");
+        setLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
+
   const checkForAlerts = (data: WeatherData) => {
     const newAlerts: { type: string; level: string; message: string }[] = [];
 
