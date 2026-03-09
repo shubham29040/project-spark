@@ -348,8 +348,8 @@ const Dashboard = () => {
             Real-time monitoring of environmental conditions powered by AI
           </p>
 
-          {/* Location Search */}
-          <div className="max-w-md mx-auto mb-6">
+          {/* Location Search & GPS */}
+          <div className="max-w-md mx-auto mb-6 flex flex-col gap-3">
             <form 
               onSubmit={(e) => {
                 e.preventDefault();
@@ -376,6 +376,16 @@ const Dashboard = () => {
                 )}
               </Button>
             </form>
+            
+            <Button 
+              variant="outline" 
+              onClick={useMyLocation}
+              disabled={loading}
+              className="w-full gap-2"
+            >
+              <Navigation className="w-4 h-4" />
+              Use My Location
+            </Button>
           </div>
           
           {weatherData && (
