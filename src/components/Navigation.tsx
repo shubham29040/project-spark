@@ -1,4 +1,4 @@
-import { Shield, Menu, X, LogIn, LogOut, Settings } from "lucide-react";
+import { Shield, LogIn, LogOut, Settings } from "lucide-react";
 import { NavLink } from "./NavLink";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
@@ -8,7 +8,6 @@ import { User } from "@supabase/supabase-js";
 import { ThemeToggle } from "./ThemeToggle";
 
 const Navigation = () => {
-  const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
@@ -32,10 +31,11 @@ const Navigation = () => {
   return (
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-14 md:h-16">
           <NavLink to="/" className="flex items-center gap-2 text-xl font-bold text-foreground hover:text-primary transition-colors">
             <Shield className="w-6 h-6 text-primary" />
-            DisasterSense
+            <span className="hidden sm:inline">DisasterSense</span>
+            <span className="sm:hidden text-base font-bold">DS</span>
           </NavLink>
 
           {/* Desktop Navigation */}
@@ -88,74 +88,11 @@ const Navigation = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </Button>
-        </div>
-
-        {/* Mobile Navigation */}
-        {isOpen && (
-          <div className="md:hidden py-4 space-y-2 border-t border-border">
-            <NavLink 
-              to="/" 
-              className="block py-2 text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-2 hover:font-medium"
-              activeClassName="text-primary font-semibold"
-              onClick={() => setIsOpen(false)}
-            >
-              Home
-            </NavLink>
-            <NavLink 
-              to="/dashboard" 
-              className="block py-2 text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-2 hover:font-medium"
-              activeClassName="text-primary font-semibold"
-              onClick={() => setIsOpen(false)}
-            >
-              Dashboard
-            </NavLink>
-            <NavLink 
-              to="/features" 
-              className="block py-2 text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-2 hover:font-medium"
-              activeClassName="text-primary font-semibold"
-              onClick={() => setIsOpen(false)}
-            >
-              Features
-            </NavLink>
-            <NavLink 
-              to="/safety" 
-              className="block py-2 text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-2 hover:font-medium"
-              activeClassName="text-primary font-semibold"
-              onClick={() => setIsOpen(false)}
-            >
-              Safety Guide
-            </NavLink>
-            <div className="flex flex-col gap-2 pt-2">
-              <ThemeToggle />
-              {user ? (
-                <>
-                  <Button onClick={() => { navigate("/settings"); setIsOpen(false); }} variant="ghost" size="sm" className="justify-start">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Settings
-                  </Button>
-                  <Button onClick={handleSignOut} variant="outline" size="sm">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </Button>
-                </>
-              ) : (
-                <Button onClick={() => { navigate("/auth"); setIsOpen(false); }} variant="default" size="sm">
-                  <LogIn className="w-4 h-4 mr-2" />
-                  Sign In
-                </Button>
-              )}
-            </div>
+          {/* Mobile: compact top bar with theme toggle */}
+          <div className="md:hidden flex items-center gap-2">
+            <ThemeToggle />
           </div>
-        )}
+        </div>
       </div>
     </nav>
   );
